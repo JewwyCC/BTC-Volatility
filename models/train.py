@@ -19,6 +19,7 @@ import yaml
 import mlflow
 import mlflow.sklearn
 from sklearn.linear_model import LogisticRegression
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.metrics import (
     precision_recall_curve, average_precision_score, f1_score,
     precision_score, recall_score, roc_auc_score, confusion_matrix,
@@ -100,31 +101,57 @@ def baseline_zscore_model(X: pd.DataFrame, y: pd.Series, threshold_std: float = 
     }
 
 
-def train_ml_model(X_train: pd.DataFrame, y_train: pd.Series, model_type: str = 'logistic') -> object:
-    """Train ML model (Logistic Regression or XGBoost)."""
+def train_ml_model(X_train: pd.DataFrame, y_train: pd.Series, model_type: str = 'logistic', 
+                   use_calibration: bool = False) -> object:
+    """
+    Train ML model (Logistic Regression or XGBoost).
+    
+    Args:
+        X_train: Training features
+        y_train: Training labels
+        model_type: 'logistic' or 'xgboost'
+        use_calibration: If True, apply Platt scaling calibration
+    
+    Returns:
+        Trained model (calibrated if use_calibration=True)
+    """
     if model_type == 'xgboost' and XGBOOST_AVAILABLE:
         logger.info("Training XGBoost model...")
-        model = xgb.XGBClassifier(
-            n_estimators=100,
-            max_depth=5,
-            learning_rate=0.1,
+        base_model = xgb.XGBClassifier(
+            n_estimators=200,  # Increased from 100
+            max_depth=6,  # Increased from 5
+            learning_rate=0.05,  # Reduced from 0.1 for better generalization
             subsample=0.8,
             colsample_bytree=0.8,
+            min_child_weight=3,  # Added for regularization
+            gamma=0.1,  # Added for regularization
             random_state=42,
             eval_metric='logloss',
             scale_pos_weight=len(y_train[y_train == 0]) / len(y_train[y_train == 1])  # Handle imbalance
         )
-        model.fit(X_train, y_train)
     else:
         logger.info("Training Logistic Regression model...")
-        model = LogisticRegression(
+        base_model = LogisticRegression(
             max_iter=1000,
             random_state=42,
             class_weight='balanced'  # Handle class imbalance
         )
-        model.fit(X_train, y_train)
     
-    return model
+    # Fit base model
+    base_model.fit(X_train, y_train)
+    
+    # Apply calibration if requested
+    if use_calibration:
+        logger.info("Applying Platt scaling calibration...")
+        calibrated_model = CalibratedClassifierCV(
+            base_model, 
+            method='sigmoid',  # Platt scaling
+            cv=3  # 3-fold cross-validation for calibration
+        )
+        calibrated_model.fit(X_train, y_train)
+        return calibrated_model
+    else:
+        return base_model
 
 
 def find_optimal_threshold(y_true: pd.Series, y_pred_proba: pd.Series, metric: str = 'f1') -> float:
@@ -436,6 +463,8 @@ def main():
     parser.add_argument('--model_type', type=str, default='logistic',
                        choices=['logistic', 'xgboost'],
                        help='ML model type')
+    parser.add_argument('--calibrate', action='store_true',
+                       help='Apply Platt scaling calibration to handle distribution shift')
     parser.add_argument('--config', type=str, default=None,
                        help='Path to config file')
     
@@ -623,7 +652,8 @@ def main():
     
     with mlflow_context:
         # Train ML model
-        ml_model = train_ml_model(X_train, y_train, model_type=args.model_type)
+        ml_model = train_ml_model(X_train, y_train, model_type=args.model_type, 
+                                 use_calibration=args.calibrate)
         
         # Get probabilities
         y_train_pred_proba = ml_model.predict_proba(X_train)[:, 1]
@@ -684,7 +714,8 @@ def main():
                     'tau': tau,
                     'n_features': len(available_features),
                     'features': ','.join(available_features),
-                    'optimal_threshold': optimal_threshold
+                    'optimal_threshold': optimal_threshold,
+                    'calibrated': args.calibrate
                 })
                 
                 if args.model_type == 'xgboost' and XGBOOST_AVAILABLE:
@@ -703,14 +734,43 @@ def main():
         artifacts_dir.mkdir(parents=True, exist_ok=True)
         
         # Save optimal threshold
-        threshold_path = artifacts_dir / f"{args.model_type}_optimal_threshold.json"
+        model_suffix = f"{args.model_type}{'_calibrated' if args.calibrate else ''}"
+        threshold_path = artifacts_dir / f"{model_suffix}_optimal_threshold.json"
         import json
         with open(threshold_path, 'w') as f:
             json.dump({'optimal_threshold': float(optimal_threshold), 'tau': float(tau)}, f, indent=2)
         logger.info(f"Optimal threshold saved to {threshold_path}")
         
+        # Log feature importance if available
+        # Handle calibrated models (they wrap the base model)
+        base_model = ml_model
+        if hasattr(ml_model, 'calibrated_classifiers_'):
+            # For calibrated models, get the base estimator
+            base_model = ml_model.calibrated_classifiers_[0].estimator
+        
+        if hasattr(base_model, 'feature_importances_'):
+            feature_importance = pd.DataFrame({
+                'feature': available_features,
+                'importance': base_model.feature_importances_
+            }).sort_values('importance', ascending=False)
+            logger.info(f"\nFeature Importance:")
+            for _, row in feature_importance.iterrows():
+                logger.info(f"  {row['feature']}: {row['importance']:.6f}")
+        elif hasattr(base_model, 'coef_'):
+            # For logistic regression, use absolute coefficients
+            coef = base_model.coef_[0]
+            feature_importance = pd.DataFrame({
+                'feature': available_features,
+                'coefficient': coef,
+                'abs_coefficient': np.abs(coef)
+            }).sort_values('abs_coefficient', ascending=False)
+            logger.info(f"\nFeature Importance (Logistic Regression Coefficients):")
+            for _, row in feature_importance.iterrows():
+                logger.info(f"  {row['feature']}: {row['coefficient']:.6f} (abs: {row['abs_coefficient']:.6f})")
+        
         if args.model_type == 'xgboost' and XGBOOST_AVAILABLE:
-            model_path = artifacts_dir / "xgb_model.pkl"
+            model_filename = f"xgb_model{'_calibrated' if args.calibrate else ''}.pkl"
+            model_path = artifacts_dir / model_filename
             import pickle
             with open(model_path, 'wb') as f:
                 pickle.dump(ml_model, f)
@@ -725,7 +785,8 @@ def main():
                     except Exception as e2:
                         logger.warning(f"Could not log model artifact: {e2}")
         else:
-            model_path = artifacts_dir / "logistic_model.pkl"
+            model_filename = f"logistic_model{'_calibrated' if args.calibrate else ''}.pkl"
+            model_path = artifacts_dir / model_filename
             import pickle
             with open(model_path, 'wb') as f:
                 pickle.dump(ml_model, f)

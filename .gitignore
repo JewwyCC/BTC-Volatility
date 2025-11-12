@@ -38,7 +38,6 @@ Thumbs.db
 
 # Jupyter
 .ipynb_checkpoints/
-*.ipynb
 
 # Reports (keep structure, ignore generated)
 reports/evidently/*.html
