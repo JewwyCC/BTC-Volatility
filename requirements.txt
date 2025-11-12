@@ -2,7 +2,7 @@
 python-dotenv==1.0.0
 pyyaml==6.0.1
 websocket-client==1.6.4
-kafka-python==2.0.2
+kafka-python>=2.2.15
 
 # Data processing
 pandas>=2.2.0
