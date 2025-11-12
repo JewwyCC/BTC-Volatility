@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Data
+data/raw/*.ndjson
+data/processed/*.parquet
+*.db
+*.sqlite
+
+# MLflow
+mlruns/
+mlflow.db
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Reports (keep structure, ignore generated)
+reports/evidently/*.html
+reports/evidently/*.json
+
+# Logs
+*.log
+logs/
+
+# Docker
+.dockerignore
+

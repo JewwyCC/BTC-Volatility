@@ -1,0 +1,25 @@
+# Core dependencies
+python-dotenv==1.0.0
+pyyaml==6.0.1
+websocket-client==1.6.4
+kafka-python==2.0.2
+
+# Data processing
+pandas>=2.2.0
+numpy>=1.26.0
+pyarrow>=14.0.0
+matplotlib>=3.10.0
+seaborn>=0.13.0
+
+# ML & Tracking
+mlflow>=2.8.1
+scikit-learn>=1.3.0
+xgboost>=2.0.0
+
+# Monitoring & Quality
+evidently>=0.4.15
+
+# Utilities
+python-dateutil>=2.8.0
+requests>=2.31.0
+
