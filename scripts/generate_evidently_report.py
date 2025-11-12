@@ -41,10 +41,13 @@ def main():
                        help='Path to features Parquet file')
     parser.add_argument('--output_dir', type=str, default='reports/evidently',
                        help='Output directory for reports')
-    parser.add_argument('--early_pct', type=float, default=0.3,
-                       help='Percentage of data to use as early window (default: 0.3 = first 30%%)')
-    parser.add_argument('--late_pct', type=float, default=0.3,
-                       help='Percentage of data to use as late window (default: 0.3 = last 30%%)')
+    parser.add_argument('--train_pct', type=float, default=0.7,
+                       help='Percentage of data used for training (default: 0.7 = 70%%)')
+    parser.add_argument('--val_pct', type=float, default=0.1,
+                       help='Percentage of data used for validation (default: 0.1 = 10%%)')
+    parser.add_argument('--compare_mode', type=str, default='train_test',
+                       choices=['train_test', 'early_late'],
+                       help='Comparison mode: train_test (default) or early_late')
     parser.add_argument('--config', type=str, default=None,
                        help='Path to config file')
     
@@ -71,18 +74,34 @@ def main():
     logger.info(f"Loaded {len(df)} feature rows")
     logger.info(f"Time range: {df['timestamp'].min()} to {df['timestamp'].max()}")
     
-    # Split into early and late windows
-    n_early = int(len(df) * args.early_pct)
-    n_late = int(len(df) * args.late_pct)
-    
-    df_early = df.iloc[:n_early].copy()
-    df_late = df.iloc[-n_late:].copy()
-    
-    logger.info(f"\nWindow Split:")
-    logger.info(f"  Early window: {len(df_early)} samples ({args.early_pct*100:.1f}%)")
-    logger.info(f"    Time range: {df_early['timestamp'].min()} to {df_early['timestamp'].max()}")
-    logger.info(f"  Late window: {len(df_late)} samples ({args.late_pct*100:.1f}%)")
-    logger.info(f"    Time range: {df_late['timestamp'].min()} to {df_late['timestamp'].max()}")
+    # Split based on comparison mode
+    if args.compare_mode == 'train_test':
+        # Use train/test split (matching model training)
+        n_train = int(len(df) * args.train_pct)
+        n_val = int(len(df) * args.val_pct)
+        test_pct = 1 - args.train_pct - args.val_pct
+        
+        df_reference = df.iloc[:n_train].copy()  # Training data
+        df_current = df.iloc[n_train + n_val:].copy()  # Test data
+        
+        logger.info(f"\nTrain/Test Split (for drift detection):")
+        logger.info(f"  Reference (Training): {len(df_reference)} samples ({args.train_pct*100:.1f}%)")
+        logger.info(f"    Time range: {df_reference['timestamp'].min()} to {df_reference['timestamp'].max()}")
+        logger.info(f"  Current (Test): {len(df_current)} samples ({test_pct*100:.1f}%)")
+        logger.info(f"    Time range: {df_current['timestamp'].min()} to {df_current['timestamp'].max()}")
+    else:
+        # Early/late window split (original behavior)
+        n_early = int(len(df) * (1 - args.val_pct - (1 - args.train_pct)) / 2)
+        n_late = int(len(df) * (1 - args.val_pct - (1 - args.train_pct)) / 2)
+        
+        df_reference = df.iloc[:n_early].copy()
+        df_current = df.iloc[-n_late:].copy()
+        
+        logger.info(f"\nEarly/Late Window Split:")
+        logger.info(f"  Reference (Early): {len(df_reference)} samples")
+        logger.info(f"    Time range: {df_reference['timestamp'].min()} to {df_reference['timestamp'].max()}")
+        logger.info(f"  Current (Late): {len(df_current)} samples")
+        logger.info(f"    Time range: {df_current['timestamp'].min()} to {df_current['timestamp'].max()}")
     
     # Define feature columns
     feature_cols = [
@@ -97,8 +116,8 @@ def main():
     # Select only feature columns for comparison (exclude timestamp, product_id)
     cols_to_compare = available_features + (['future_volatility'] if 'future_volatility' in df.columns else [])
     
-    df_early_compare = df_early[cols_to_compare].copy()
-    df_late_compare = df_late[cols_to_compare].copy()
+    df_reference_compare = df_reference[cols_to_compare].copy()
+    df_current_compare = df_current[cols_to_compare].copy()
     
     # Create output directory
     output_dir = Path(args.output_dir)
@@ -107,7 +126,7 @@ def main():
     # Generate Data Drift Report
     logger.info("\nGenerating Data Drift Report...")
     drift_report = Report([DataDriftPreset()])
-    drift_eval = drift_report.run(current_data=df_late_compare, reference_data=df_early_compare)
+    drift_eval = drift_report.run(current_data=df_current_compare, reference_data=df_reference_compare)
     
     # Save drift report
     drift_report_path = output_dir / "data_drift_report.html"
@@ -117,7 +136,7 @@ def main():
     # Generate Data Summary Report (for data quality)
     logger.info("Generating Data Summary Report...")
     summary_report = Report([DataSummaryPreset()])
-    summary_eval = summary_report.run(current_data=df_late_compare, reference_data=df_early_compare)
+    summary_eval = summary_report.run(current_data=df_current_compare, reference_data=df_reference_compare)
     
     # Save summary report
     summary_report_path = output_dir / "data_summary_report.html"
@@ -130,7 +149,7 @@ def main():
         DataDriftPreset(),
         DataSummaryPreset()
     ])
-    combined_eval = combined_report.run(current_data=df_late_compare, reference_data=df_early_compare)
+    combined_eval = combined_report.run(current_data=df_current_compare, reference_data=df_reference_compare)
     
     # Save combined report
     combined_report_path = output_dir / "combined_report.html"

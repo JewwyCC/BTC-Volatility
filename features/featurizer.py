@@ -179,23 +179,34 @@ def compute_future_volatility(df: pd.DataFrame, horizon: int = 60) -> pd.DataFra
     """
     Compute future volatility (rolling std of returns) over the next 'horizon' seconds.
     This will be used as the target variable.
+    
+    For each timestamp t, computes the standard deviation of returns from t+1 to t+horizon.
+    Since pandas rolling() only looks backward, we use a manual forward-looking approach.
     """
     if len(df) == 0:
         return df
     
     df_indexed = df.set_index('timestamp').sort_index()
+    returns = df_indexed['midprice_returns'].copy()
     
-    # Compute future volatility: rolling std of returns over next horizon seconds
-    # We shift backwards to look into the future
-    future_returns = df_indexed['midprice_returns'].shift(-1)
+    # Initialize future volatility column
+    future_vol = pd.Series(index=df_indexed.index, dtype=float)
     
-    # Rolling window looking forward
-    window_str = f'{horizon}s'
-    df_indexed['future_volatility'] = (
-        future_returns
-        .rolling(window=window_str, min_periods=2)
-        .std()
-    )
+    # For each timestamp, compute std of returns in the next 'horizon' seconds
+    for i, (ts, _) in enumerate(df_indexed.iterrows()):
+        # Find all timestamps within the next 'horizon' seconds (excluding current)
+        end_time = ts + pd.Timedelta(seconds=horizon)
+        
+        # Get returns from next timestamp to end_time
+        future_mask = (df_indexed.index > ts) & (df_indexed.index <= end_time)
+        future_returns = returns[future_mask]
+        
+        if len(future_returns) >= 2:  # Need at least 2 points for std
+            future_vol.loc[ts] = future_returns.std()
+        else:
+            future_vol.loc[ts] = np.nan
+    
+    df_indexed['future_volatility'] = future_vol
     
     # Reset index
     result = df_indexed.reset_index()
