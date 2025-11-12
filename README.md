@@ -101,12 +101,24 @@ python scripts/replay.py --raw data/raw/*.ndjson --out data/processed/features.p
 ### 7. Train Models (Milestone 3)
 
 ```bash
-# Train models and log to MLflow
-python models/train.py --features data/processed/features.parquet
+# Train XGBoost model (recommended - best performance)
+python models/train.py --features data/processed/features.parquet --model_type xgboost
+
+# Train XGBoost with calibration (for distribution shift)
+python models/train.py --features data/processed/features.parquet --model_type xgboost --calibrate
+
+# Train Logistic Regression
+python models/train.py --features data/processed/features.parquet --model_type logistic
 
 # Run inference
 python models/infer.py --features data/processed/features_test.parquet
 ```
+
+**Model Performance:**
+- **XGBoost:** F1=0.4848, ROC-AUC=0.9174, PR-AUC=0.4678 ✅ (Recommended)
+- **Logistic Regression:** F1=0.0063, ROC-AUC=0.5675, PR-AUC=0.1668
+
+See `docs/improvements_complete.md` for detailed performance comparison.
 
 ## Configuration
 
