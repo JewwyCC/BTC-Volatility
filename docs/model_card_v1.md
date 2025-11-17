@@ -2,7 +2,7 @@
 
 **Model Version:** 1.0  
 **Date:** November 12, 2025  
-**Authors:** [Your Name]  
+**Authors:** Jerry Chen 
 **Project:** Real-Time Crypto Volatility Detection
 
 ---

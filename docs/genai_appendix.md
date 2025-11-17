@@ -14,110 +14,142 @@ For each use, document:
 ## AI Usage Log
 
 ### Entry 1
-**Prompt (summary)**: "Generate project structure and Docker Compose setup for Kafka and MLflow"
+**Prompt (summary)**: Inputted assignment description into the chat to generate project structure and begin building Milestone 1
 
 **Used in**: 
-- `docker/compose.yaml`
+- docker/compose.yaml
 - Project directory structure
-- `README.md`
+- Dockerfile.ingestor
+- requirements.txt
+- README.md
+- config.yaml
+- ws_ingest.py
+- kafka_consume_check.py
+- scoping_brief.md
 
 **Verification**: 
-- Reviewed Docker Compose configuration for correct service definitions
+- Reviewed configurations for correct service definitions
 - Verified Kafka and MLflow ports and networking
 - Tested directory structure matches assignment requirements
 
----
 
 ### Entry 2
-**Prompt (summary)**: "Create WebSocket ingestor for Coinbase Advanced Trade API with Kafka producer"
-
+**Prompt (summary)**: linked coinbase API documentation to cursor agent for proper API handling
 **Used in**: 
-- `scripts/ws_ingest.py`
+- ws_ingest.py
 
 **Verification**: 
-- Reviewed WebSocket connection logic against Coinbase API documentation
-- Verified subscription message format matches API requirements
-- Added heartbeat channel subscription per best practices
-- Implemented reconnection logic and error handling
-- Tested message parsing and Kafka publishing logic
+- Manually compared API implementation
+- Program ran for initial testing
 
----
 
 ### Entry 3
-**Prompt (summary)**: "Create Kafka consumer validation script"
-
+**Prompt (summary)**: test milestone 1
 **Used in**: 
-- `scripts/kafka_consume_check.py`
+- compose.yaml
+- ws_ingest.py
+- milestone1_test_results.md
 
 **Verification**: 
-- Reviewed consumer configuration and message deserialization
-- Verified argument parsing and error handling
-- Tested message counting and sample display logic
+- Initial testing passed
+- Test results documented in milestone1_test_results.md
 
----
 
 ### Entry 4
-**Prompt (summary)**: "Generate scoping brief template for volatility detection project"
-
+**Prompt (summary)**: began building milestone 2, re-attached milestone 2 requirements for memory/context
 **Used in**: 
-- `docs/scoping_brief.md`
+- featurizer.py
+- replay.py
+- eda.ipynb
+- generate_evidently_report.py
 
 **Verification**: 
-- Reviewed content for completeness and alignment with assignment requirements
-- Ensured all required sections are present (use case, prediction goal, success metric, risk assumptions)
-- Content needs to be filled in with project-specific details
+- manually ran EDA and featurizer thoroughly and edited code wherever broken
 
----
 
 ### Entry 5
-**Prompt (summary)**: "Create feature engineering pipeline with Kafka consumer, compute windowed features, and generate Evidently reports"
-
+**Prompt (summary)**: linked evidently documentation to cursor agent for proper implementation
 **Used in**: 
-- `features/featurizer.py`
-- `scripts/replay.py`
-- `scripts/generate_evidently_report.py`
-- `notebooks/eda.ipynb`
+- generate_evidently_report.py
 
 **Verification**: 
-- Reviewed feature computation logic for correctness
-- Verified rolling window calculations match specification
-- Tested replay script produces identical features
-- Validated Evidently report generation with correct API usage
+- milestone 2 requirements complete
+- manual review of generated evidently report
 
----
 
 ### Entry 6
-**Prompt (summary)**: "Create model training script with baseline and ML models, time-based splits, and MLflow logging"
-
+**Prompt (summary)**: began building milestone 3, re-attached milestone 3 requirements for memory/context
 **Used in**: 
-- `models/train.py`
-- `models/infer.py`
-- `scripts/generate_eval_report.py`
+- train.py
+- infer.py
+- generate_eval_report.py
+- generate_evidently_report.py
+- model_card_v1.md
 
 **Verification**: 
-- Reviewed time-based split logic to prevent data leakage
-- Verified MLflow logging includes all required metrics (PR-AUC, F1, etc.)
-- Tested baseline (z-score) and ML (Logistic Regression) model implementations
-- Validated inference latency meets < 2x real-time requirement
-- Confirmed model artifacts are saved correctly
+- looked somewhat in-depthly at the code generated, all scripts ran with data leakage issues
 
----
+## Chat Log #2
 
 ### Entry 7
-**Prompt (summary)**: "Generate Model Card v1 and evaluation report with PR-AUC metrics"
-
+**Prompt (summary)**: bug fixes in training ML model, while running generated test cases
 **Used in**: 
-- `docs/model_card_v1.md`
-- `scripts/generate_eval_report.py`
-- `reports/model_eval.md`
+- train.py
 
 **Verification**: 
-- Reviewed Model Card structure and completeness
-- Verified evaluation report includes PR-AUC (required metric)
-- Ensured all sections align with assignment requirements
-- Confirmed metrics are extracted correctly from MLflow
+- verified against the fix plan Cursor agent generated
+- reviewed result confusion matrices, ROC-AUC, label logging, test scores
 
----
 
-**Note**: This log documents GenAI usage across all three milestones.
+### Entry 8
+**Prompt (summary)**: addressing issues with not having positively labeled data in validation/test set; offered solutions in either expanding the range of volatility classification, or doing a stratified temporal split
+**Used in**: 
+- train.py
+- config.yaml
+- config_temporal_90.yaml
+- compare_solutions.py
+- solution_comparison.md
+
+**Verification**: 
+- compared generated solutions and reported results
+
+
+## Chat Log #3
+
+### Entry 9
+**Prompt (summary)**: investigating data leakage issues since initial testing had super high accuracy
+**Used in**: 
+- eda.ipynb
+- featurizer.py
+- data_leakage_fix.md
+
+**Verification**: 
+- summarized findings were indicative of results
+- further testing replicated good data leakage fixes
+
+
+## Chat Log #4
+
+### Entry 10
+**Prompt (summary)**: investigating low accuracy issues with model after data leakage fixes
+**Used in**: 
+- model_perforamnce_analysis.md
+- train.py
+- compare_all_models.py
+- model_improvements_summary.py
+
+**Verification**: 
+- summarized findings were indicative of results
+- further testing replicated good performance from newly improved data modeling
+
+
+### Entry 11
+**Prompt (summary)**: updating model card, model eval, and evidently report
+**Used in**: 
+- generate_model_comparison_report.py
+- model_card_v1.md
+- model_eval.md
+
+**Verification**: 
+- N/A
 
