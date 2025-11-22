@@ -8,6 +8,7 @@ import joblib
 import os
 from datetime import datetime, timezone
 from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +73,6 @@ def version():
 def metrics():
     return prometheus_client.generate_latest()
 
-from fastapi import HTTPException
 
 @api.post("/predict")
 def predict(payload : Payload):
