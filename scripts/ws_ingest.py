@@ -56,7 +56,6 @@ def signal_handler(sig, frame):
         ws.close()
     if producer:
         producer.close()
-    sys.exit(0)
 
 
 def on_message(ws, message):
@@ -85,13 +84,40 @@ def on_message(ws, message):
         # Add ingestion timestamp
         data['ingestion_timestamp'] = datetime.now(timezone.utc).isoformat()
         
-        # Publish to Kafka
+        # Serialize message once
         message_json = json.dumps(data)
-        future = producer.send(
-            config['kafka']['topics']['raw'],
-            value=message_json.encode('utf-8'),
-            key=str(product_id).encode('utf-8')
-        )
+        value_bytes = message_json.encode("utf-8")
+        key_bytes = str(product_id).encode("utf-8")
+
+        # --- Retry sending to Kafka explicitly ---
+        max_attempts = 3
+        for attempt in range(1, max_attempts + 1):
+            try:
+                future = producer.send(
+                    config["kafka"]["topics"]["raw"],
+                    value=value_bytes,
+                    key=key_bytes,
+                )
+                # Wait for Kafka to confirm it was written
+                future.get(timeout=10)
+                break  # success → leave the retry loop
+            except KafkaError as e:
+                logger.warning(
+                    "Kafka send failed (attempt %d/%d): %s",
+                    attempt,
+                    max_attempts,
+                    e,
+                )
+                # Small pause before the next try
+                time.sleep(1)
+
+                # If this was the last attempt, record a hard error
+                if attempt == max_attempts:
+                    logger.error(
+                        "Giving up on message after %d failed Kafka attempts",
+                        max_attempts,
+                    )
+
         
         # Optionally mirror to local file
         if config.get('data', {}).get('raw_dir'):
@@ -182,6 +208,7 @@ def main():
     config['coinbase']['product_id'] = args.pair
     
     # Set up signal handlers
+    # Register signal handlers so Ctrl-C / Docker stop will trigger a graceful shutdown
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
     
@@ -235,7 +262,8 @@ def main():
                     logger.info(f"Reached time limit of {args.minutes} minutes")
                     break
             
-            # Check if WebSocket thread is still alive
+            # Check if WebSocket thread is still alive (reconnect if not)
+            # If the WebSocket thread died unexpectedly, try to reconnect
             if not ws_thread.is_alive() and running:
                 logger.warning("WebSocket thread died. Attempting reconnection...")
                 reconnect_delay = config['coinbase'].get('reconnect_delay', 5)
