@@ -10,12 +10,31 @@ from pydantic import BaseModel
 
 model_var = "xgb"
 model_version = "v1"
-model = joblib.load("/models/artifacts/xgb_model.pkl")
+# Get the directory where this script is located
+script_dir = os.path.dirname(os.path.abspath(__file__))
+model_path = os.path.join(script_dir, "models", "artifacts", "xgb_model.pkl")
+model = joblib.load(model_path)
 
-count = Counter("predict_req_tot")
-latency = Histogram("predict_req_latency")
+count = Counter("predict_req_tot", "Total number of prediction requests")
+latency = Histogram("predict_req_latency", "Latency of prediction requests in seconds")
 
-api = FastAPI()
+api = FastAPI(title="ML Prediction API", version="1.0.0")
+
+@api.get("/")
+async def root():
+    return {
+        "message": "ML Prediction API",
+        "model": model_var,
+        "version": model_version,
+        "endpoints": {
+            "/health": "GET - Health check endpoint",
+            "/version": "GET - Get model version information",
+            "/metrics": "GET - Prometheus metrics",
+            "/predict": "POST - Make predictions (requires JSON payload)",
+            "/docs": "GET - Interactive API documentation (Swagger UI)",
+            "/redoc": "GET - Alternative API documentation (ReDoc)"
+        }
+    }
 
 class Row(BaseModel):
     ret_mean : float
