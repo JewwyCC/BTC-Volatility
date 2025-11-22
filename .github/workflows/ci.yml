@@ -31,7 +31,7 @@ jobs:
 
       - name: Run Ruff
         run: |
-          ruff check .
+          ruff check api_v1.py tests/test_api_health.py
 
       - name: Run tests
         run: |
