@@ -1,0 +1,8 @@
+run_id: 25a728f12372431e9f0946fed1e2ca53
+experiment_id: '1'
+user_id: jerrychen
+status: FINISHED
+start_time: 1762974243263
+end_time: 1762974243384
+artifact_uri: /mlflow/artifacts/1/25a728f12372431e9f0946fed1e2ca53/artifacts
+lifecycle_stage: active

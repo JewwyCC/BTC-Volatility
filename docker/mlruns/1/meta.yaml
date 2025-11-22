@@ -1,0 +1,5 @@
+experiment_id: '1'
+name: volatility_detection
+artifact_location: /mlflow/artifacts/1
+lifecycle_stage: active
+tags: {}

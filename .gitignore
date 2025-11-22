@@ -17,10 +17,6 @@ data/processed/*.parquet
 *.db
 *.sqlite
 
-# MLflow
-mlruns/
-mlflow.db
-
 # Environment
 .env
 .env.local

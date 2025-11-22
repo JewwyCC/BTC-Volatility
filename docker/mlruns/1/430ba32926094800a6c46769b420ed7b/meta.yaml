@@ -1,0 +1,8 @@
+run_id: 430ba32926094800a6c46769b420ed7b
+experiment_id: '1'
+user_id: jerrychen
+status: FAILED
+start_time: 1762974243421
+end_time: 1762974243490
+artifact_uri: /mlflow/artifacts/1/430ba32926094800a6c46769b420ed7b/artifacts
+lifecycle_stage: active
