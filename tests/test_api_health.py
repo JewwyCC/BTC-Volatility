@@ -1,18 +1,20 @@
-# tests/test_api_health.py
-import os
 import sys
+from pathlib import Path
 
 from fastapi.testclient import TestClient
-from api_v1 import api  # IMPORTANT: FastAPI instance is named `api`, not `app`
 
-# After imports: adjust sys.path so pytest can find api_v1.py
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, PROJECT_ROOT)
+# --- make project root importable for CI / pytest ---
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from api_v1 import api  # noqa: E402  <- tell Ruff to ignore “import not at top”
+# ----------------------------------------------------
 
 client = TestClient(api)
 
 
-def test_health():
+def test_health_ok():
     """Basic integration test: /health should return status: ok."""
     response = client.get("/health")
 
