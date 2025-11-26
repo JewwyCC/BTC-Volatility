@@ -19,6 +19,7 @@ A real-time data pipeline that connects to Coinbase's Advanced Trade WebSocket A
 │   ├── ws_ingest.py      # WebSocket ingestor
 │   ├── kafka_consume_check.py  # Kafka validation
 │   └── replay.py         # Feature replay script
+│   └── load_test.py      # Load test
 ├── docker/               # Docker configuration
 │   ├── compose.yaml      # Kafka + MLflow services
 │   └── Dockerfile.ingestor  # Ingestor container
@@ -112,6 +113,25 @@ python models/train.py --features data/processed/features.parquet --model_type l
 
 # Run inference
 python models/infer.py --features data/processed/features_test.parquet
+```
+
+### 8. Week 5 Setup
+
+```bash
+# Install Miniforge and create env
+conda create -n btcenv python=3.10 && conda activate btcenv
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Copy environment
+cp .env.example .env
+
+# Start API server
+python -m uvicorn api_v1:api --reload
+
+# Run load test in a second terminal
+python scripts/load_test.py
 ```
 
 **Model Performance:**
