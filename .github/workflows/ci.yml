@@ -27,11 +27,11 @@ jobs:
 
       - name: Run Black
         run: |
-          python -m black .
+          python -m black --check .
 
       - name: Run Ruff
         run: |
-          ruff check api_v1.py tests/test_api_health.py
+          ruff check scripts/ features/ models/ api_v1.py tests/
 
       - name: Run tests
         run: |

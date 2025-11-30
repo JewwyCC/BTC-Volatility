@@ -1,0 +1,207 @@
+{
+  "dashboard": {
+    "title": "ML Prediction API - Monitoring Dashboard",
+    "tags": ["ml", "api", "prometheus"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Rate (req/s)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(predict_req_tot[1m])",
+            "legendFormat": "Request Rate",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "reqps", "label": "Requests/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Error Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(predict_req_errors_total[1m])",
+            "legendFormat": "Error Rate",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(predict_req_tot[1m])",
+            "legendFormat": "Total Requests",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Errors/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "P50 Latency",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(predict_req_latency_bucket[5m]))",
+            "legendFormat": "P50",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Latency (seconds)"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 4,
+        "title": "P95 Latency",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(predict_req_latency_bucket[5m]))",
+            "legendFormat": "P95",
+            "refId": "A"
+          },
+          {
+            "expr": "0.8",
+            "legendFormat": "SLO Target (800ms)",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Latency (seconds)"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 5,
+        "title": "P99 Latency",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, rate(predict_req_latency_bucket[5m]))",
+            "legendFormat": "P99",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Latency (seconds)"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Error Rate by Status Code",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "rate(predict_req_errors_total[1m])",
+            "legendFormat": "{{status_code}} - {{error_type}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Errors/sec"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Request Status Distribution",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "sum by (status_code) (predict_req_by_status_total)",
+            "legendFormat": "{{status_code}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Model Version Info",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 8, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "model_version_info",
+            "legendFormat": "{{model_var}}/{{version}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "none",
+          "textMode": "value"
+        }
+      },
+      {
+        "id": 9,
+        "title": "Data Freshness (Last Prediction Time)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 8, "x": 8, "y": 24},
+        "targets": [
+          {
+            "expr": "time() - predict_req_latency_sum / predict_req_latency_count",
+            "legendFormat": "Seconds since last request",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "thresholds",
+          "graphMode": "none",
+          "textMode": "value",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": 0},
+              {"color": "yellow", "value": 60},
+              {"color": "red", "value": 300}
+            ]
+          }
+        }
+      },
+      {
+        "id": 10,
+        "title": "SLO Compliance (P95 ≤ 800ms)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 8, "x": 16, "y": 24},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(predict_req_latency_bucket[5m])) <= 0.8",
+            "legendFormat": "SLO Met",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "thresholds",
+          "graphMode": "none",
+          "textMode": "value",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": 0},
+              {"color": "green", "value": 1}
+            ]
+          }
+        }
+      }
+    ]
+  }
+}
+
