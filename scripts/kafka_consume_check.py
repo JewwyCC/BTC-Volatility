@@ -46,6 +46,10 @@ def main():
                        help='Timeout in seconds to wait for messages')
     parser.add_argument('--config', type=str, default=None,
                        help='Path to config file (default: config.yaml)')
+    parser.add_argument('--verbose', action='store_true',
+                       help='Show full message content')
+    parser.add_argument('--show-predictions', action='store_true',
+                       help='Show prediction values for each message (for predictions topic)')
     
     args = parser.parse_args()
     
@@ -93,6 +97,15 @@ def main():
                     'value': value
                 })
             
+            # Show prediction values in real-time if requested
+            if args.show_predictions and isinstance(value, dict) and 'prediction' in value:
+                pred = value.get('prediction', 'N/A')
+                score = value.get('score', 'N/A')
+                prob = value.get('probability', 'N/A')
+                product = value.get('product_id', 'N/A')
+                ts = value.get('timestamp', 'N/A')
+                logger.info(f"Msg {message_count}: {product} | Prediction: {pred} | Score: {score:.4f} | Prob: {prob:.4f} | Time: {ts}")
+            
             # Log progress
             if message_count % 100 == 0:
                 logger.info(f"Consumed {message_count} messages...")
@@ -133,10 +146,28 @@ def main():
             logger.info(f"  Timestamp: {msg['timestamp']}")
             logger.info(f"  Value keys: {list(msg['value'].keys()) if isinstance(msg['value'], dict) else 'N/A'}")
             if isinstance(msg['value'], dict):
-                # Show a few key fields
-                for key in ['product_id', 'price', 'time', 'timestamp']:
-                    if key in msg['value']:
-                        logger.info(f"    {key}: {msg['value'][key]}")
+                value = msg['value']
+                
+                # Check if this is a prediction message
+                if 'prediction' in value:
+                    # Show prediction-specific fields
+                    logger.info(f"    product_id: {value.get('product_id', 'N/A')}")
+                    logger.info(f"    timestamp: {value.get('timestamp', 'N/A')}")
+                    logger.info(f"    prediction: {value.get('prediction', 'N/A')} (0=no spike, 1=spike)")
+                    logger.info(f"    score: {value.get('score', 'N/A')}")
+                    logger.info(f"    probability: {value.get('probability', 'N/A')}")
+                    logger.info(f"    model_type: {value.get('model_type', 'N/A')}")
+                    if 'features' in value and isinstance(value['features'], dict):
+                        logger.info(f"    features: {list(value['features'].keys())}")
+                else:
+                    # Show common fields for other message types
+                    for key in ['product_id', 'price', 'time', 'timestamp', 'feature_timestamp']:
+                        if key in value:
+                            logger.info(f"    {key}: {value[key]}")
+                
+                # Show full message if verbose
+                if args.verbose:
+                    logger.info(f"    Full message: {json.dumps(value, indent=4, default=str)}")
     
     logger.info("\n✓ Stream validation successful!")
     return 0

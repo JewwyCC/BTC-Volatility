@@ -14,6 +14,9 @@ Outputs to Kafka topic 'ticks.features' and saves to Parquet.
 import json
 import argparse
 import logging
+import signal
+import sys
+import time
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
@@ -36,12 +39,30 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Global variables for graceful shutdown
+consumer: Optional[KafkaConsumer] = None
+producer: Optional[KafkaProducer] = None
+running = True
+
 
 def load_config():
     """Load configuration from config.yaml"""
     config_path = Path(__file__).parent.parent / "config.yaml"
     with open(config_path, 'r') as f:
         return yaml.safe_load(f)
+
+
+def signal_handler(sig, frame):
+    """Handle shutdown signals gracefully"""
+    global running, consumer, producer
+    logger.info("Shutting down gracefully...")
+    running = False
+    if consumer:
+        consumer.close()
+    if producer:
+        producer.flush()
+        producer.close()
+    sys.exit(0)
 
 
 def parse_ticker_message(message_data: Dict) -> Optional[Dict]:
@@ -261,11 +282,37 @@ def process_message_buffer(buffer: List[Dict], config: Dict, producer: Optional[
                         message['timestamp'] = message['timestamp'].isoformat()
                 
                 message_json = json.dumps(message, default=str)
-                producer.send(
-                    topic,
-                    value=message_json.encode('utf-8'),
-                    key=str(message.get('product_id', 'unknown')).encode('utf-8')
-                )
+                value_bytes = message_json.encode('utf-8')
+                key_bytes = str(message.get('product_id', 'unknown')).encode('utf-8')
+                
+                # Retry sending to Kafka explicitly
+                max_attempts = 3
+                for attempt in range(1, max_attempts + 1):
+                    try:
+                        future = producer.send(
+                            topic,
+                            value=value_bytes,
+                            key=key_bytes
+                        )
+                        # Wait for Kafka to confirm it was written
+                        future.get(timeout=10)
+                        break  # success → leave the retry loop
+                    except KafkaError as e:
+                        logger.warning(
+                            "Kafka send failed (attempt %d/%d): %s",
+                            attempt,
+                            max_attempts,
+                            e,
+                        )
+                        # Small pause before the next try
+                        time.sleep(1)
+                        
+                        # If this was the last attempt, record a hard error
+                        if attempt == max_attempts:
+                            logger.error(
+                                "Giving up on message after %d failed Kafka attempts",
+                                max_attempts,
+                            )
             except Exception as e:
                 logger.error(f"Error publishing feature: {e}")
     
@@ -273,6 +320,8 @@ def process_message_buffer(buffer: List[Dict], config: Dict, producer: Optional[
 
 
 def main():
+    global consumer, producer, running
+    
     parser = argparse.ArgumentParser(description='Feature Engineering Pipeline')
     parser.add_argument('--topic_in', type=str, default='ticks.raw',
                        help='Input Kafka topic')
@@ -293,6 +342,10 @@ def main():
             config = yaml.safe_load(f)
     else:
         config = load_config()
+    
+    # Set up signal handlers for graceful shutdown
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
     
     # Initialize Kafka consumer
     try:
@@ -344,6 +397,9 @@ def main():
         logger.info("Starting feature computation...")
         
         for message in consumer:
+            if not running:
+                logger.info("Shutdown signal received, stopping...")
+                break
             message_count += 1
             
             # Parse ticker message
