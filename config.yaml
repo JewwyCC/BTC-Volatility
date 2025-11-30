@@ -4,6 +4,7 @@ kafka:
   topics:
     raw: "ticks.raw"
     features: "ticks.features"
+    predictions: "ticks.predictions"
   consumer_group: "volatility_detector"
 
 # Coinbase WebSocket Configuration
@@ -36,3 +37,16 @@ model:
   split_strategy: 'stratified_temporal'
   # Minimum positive label ratio in each split (for stratified_temporal)
   min_positive_ratio: 0.01  # 1% minimum
+
+# MLflow Configuration
+mlflow:
+  tracking_uri: "http://localhost:5001"  # MLflow server URI
+  experiment_name: "volatility_detection"
+  # Model loading options:
+  # - "latest": Load latest run from experiment
+  # - "run_id": Load specific run_id (set run_id below)
+  # - "local": Fallback to local artifacts
+  model_source: "latest"  # or "run_id" or "local"
+  run_id: null  # Set to specific run_id if model_source is "run_id"
+  model_type: "xgboost"  # "xgboost" or "logistic"
+  use_calibrated: false  # Use calibrated model if available
