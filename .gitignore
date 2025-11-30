@@ -40,7 +40,6 @@ Thumbs.db
 .ipynb_checkpoints/
 
 # Reports (keep structure, ignore generated)
-reports/evidently/*.html
 reports/evidently/*.json
 
 # Logs

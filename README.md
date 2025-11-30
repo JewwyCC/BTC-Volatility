@@ -18,7 +18,8 @@ A real-time data pipeline that connects to Coinbase's Advanced Trade WebSocket A
 ├── scripts/              # Utility scripts
 │   ├── ws_ingest.py      # WebSocket ingestor
 │   ├── kafka_consume_check.py  # Kafka validation
-│   └── replay.py         # Feature replay script
+│   ├── kafka_predictor.py  # Streaming prediction consumer
+│   ├── replay.py         # Feature replay script
 │   └── load_test.py      # Load test
 ├── docker/               # Docker configuration
 │   ├── compose.yaml      # Kafka + MLflow services
@@ -26,113 +27,34 @@ A real-time data pipeline that connects to Coinbase's Advanced Trade WebSocket A
 ├── docs/                 # Documentation
 │   ├── scoping_brief.md  # Project scoping document
 │   ├── feature_spec.md   # Feature specifications
-│   └── model_card_v1.md  # Model documentation
+│   ├── model_card_v1.md  # Model documentation
+│   ├── end_to_end_validation.md  # Complete pipeline validation guide
+│   └── next_steps.md     # Implementation roadmap
 ├── handoff/              # Team handoff materials
 ├── config.yaml           # Configuration file
 ├── requirements.txt      # Python dependencies
 └── README.md             # This file
 ```
 
-## Quick Start
-
-### 1. Prerequisites
-
-- Docker and Docker Compose
-- Python 3.10+
-- Git
-
-### 2. Setup
+## Quick Setup
 
 ```bash
-# Clone the repository (if applicable)
-# cd FOAI_Proj1
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Copy environment file template
-cp .env.example .env
-# Edit .env if needed (not required for public data)
-```
-
-### 3. Start Services
-
-```bash
-# Start Kafka and MLflow
-docker compose -f docker/compose.yaml up -d
-
-# Verify services are running
-docker compose -f docker/compose.yaml ps
-
-# Check Kafka is ready (wait ~30 seconds)
-docker compose -f docker/compose.yaml logs kafka | grep "started"
-```
-
-### 4. Ingest Data
-
-```bash
-# Ingest 15 minutes of ticker data for BTC-USD
-python scripts/ws_ingest.py --pair BTC-USD --minutes 15
-
-# Or run indefinitely (Ctrl+C to stop)
-python scripts/ws_ingest.py --pair BTC-USD
-```
-
-### 5. Validate Stream
-
-```bash
-# Check that messages are in Kafka
-python scripts/kafka_consume_check.py --topic ticks.raw --min 100
-```
-
-### 6. Build Features (Milestone 2)
-
-```bash
-# Build features from Kafka stream
-python features/featurizer.py --topic_in ticks.raw --topic_out ticks.features
-
-# Replay from saved raw data
-python scripts/replay.py --raw data/raw/*.ndjson --out data/processed/features.parquet
-```
-
-### 7. Train Models (Milestone 3)
-
-```bash
-# Train XGBoost model (recommended - best performance)
-python models/train.py --features data/processed/features.parquet --model_type xgboost
-
-# Train XGBoost with calibration (for distribution shift)
-python models/train.py --features data/processed/features.parquet --model_type xgboost --calibrate
-
-# Train Logistic Regression
-python models/train.py --features data/processed/features.parquet --model_type logistic
-
-# Run inference
-python models/infer.py --features data/processed/features_test.parquet
-```
-
-### 8. Week 5 Setup
-
-```bash
-# Install Miniforge and create env
-conda create -n btcenv python=3.10 && conda activate btcenv
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Copy environment
-cp .env.example .env
-
-# Start API server
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt && cp .env.example .env
+docker compose up -d
 python -m uvicorn api_v1:api --reload
-
-# Run load test in a second terminal
-python scripts/load_test.py
 ```
+
+**Test the system:**
+```bash
+# Quick test
+./scripts/quick_test.sh
+
+# Comprehensive test
+python scripts/test_system.py
+```
+
+See detailed setup instructions below.
 
 **Model Performance:**
 - **XGBoost:** F1=0.4848, ROC-AUC=0.9174, PR-AUC=0.4678 ✅ (Recommended)
@@ -147,31 +69,13 @@ Edit `config.yaml` to customize:
 - Coinbase WebSocket configuration
 - Feature engineering parameters
 - Model training settings
+- MLflow tracking URI and model loading preferences
 
 ## Accessing Services
 
-- **MLflow UI**: http://localhost:5000
+- **MLflow UI**: http://localhost:5001
 - **Kafka**: localhost:9092
-
-## Milestones
-
-### Milestone 1: Streaming Setup & Scoping ✓
-- [x] Docker Compose for Kafka and MLflow
-- [x] WebSocket ingestor
-- [x] Kafka consumer validation
-- [x] Scoping brief
-
-### Milestone 2: Feature Engineering, EDA & Evidently
-- [ ] Feature computation pipeline
-- [ ] Replay script
-- [ ] EDA notebook
-- [ ] Evidently reports
-
-### Milestone 3: Modeling, Tracking, Evaluation
-- [ ] Model training (baseline + ML)
-- [ ] MLflow logging
-- [ ] Model evaluation
-- [ ] Model card
+- **API**: http://localhost:8000 (when running `uvicorn api_v1:api`)
 
 ## Testing
 
@@ -185,10 +89,35 @@ python scripts/ws_ingest.py --pair BTC-USD --minutes 15
 # Test Kafka consumer
 python scripts/kafka_consume_check.py --topic ticks.raw --min 100
 
+# Test streaming predictions
+python scripts/kafka_predictor.py --topic_in ticks.features --topic_out ticks.predictions
+
+# Test API (loads model from MLflow)
+python -m uvicorn api_v1:api --reload
+
 # Test container build
 docker build -f docker/Dockerfile.ingestor -t volatility-ingestor .
 docker run --rm volatility-ingestor --pair BTC-USD --minutes 1
 ```
+
+## End-to-End Pipeline
+
+Quick start:
+1. Start services: `docker compose -f docker/compose.yaml up -d`
+2. Train model: `python models/train.py --model_type xgboost`
+3. Ingest data: `python scripts/ws_ingest.py --pair BTC-USD --minutes 15`
+4. Process features: `python features/featurizer.py`
+5. Make predictions: `python scripts/kafka_predictor.py`
+
+## Model Loading
+
+The API now loads models from MLflow by default (configurable in `config.yaml`):
+
+- **MLflow loading**: Set `mlflow.model_source: "latest"` or `"run_id"`
+- **Local fallback**: Set `mlflow.model_source: "local"` or if MLflow is unavailable
+- **Version info**: Check `/version` endpoint for model source and MLflow run ID
+
+See `config.yaml` for MLflow configuration options.
 
 ## Troubleshooting
 
