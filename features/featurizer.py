@@ -290,7 +290,7 @@ def process_message_buffer(buffer: List[Dict], config: Dict, producer: Optional[
                 for attempt in range(1, max_attempts + 1):
                     try:
                         future = producer.send(
-                            topic,
+                    topic,
                             value=value_bytes,
                             key=key_bytes
                         )
@@ -312,7 +312,7 @@ def process_message_buffer(buffer: List[Dict], config: Dict, producer: Optional[
                             logger.error(
                                 "Giving up on message after %d failed Kafka attempts",
                                 max_attempts,
-                            )
+                )
             except Exception as e:
                 logger.error(f"Error publishing feature: {e}")
     

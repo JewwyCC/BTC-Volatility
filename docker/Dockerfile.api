@@ -28,3 +28,4 @@ HEALTHCHECK --interval=10s --timeout=5s --retries=3 \
 # Run API
 CMD ["python", "-m", "uvicorn", "api_v1:api", "--host", "0.0.0.0", "--port", "8000"]
 
+

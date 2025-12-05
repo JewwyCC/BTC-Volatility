@@ -1,9 +1,8 @@
-version: '3.8'
-
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
+    restart: unless-stopped
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -18,6 +17,7 @@ services:
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: kafka
+    restart: unless-stopped
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -43,6 +43,7 @@ services:
   mlflow:
     image: ghcr.io/mlflow/mlflow:v2.8.1
     container_name: mlflow
+    restart: unless-stopped
     ports:
       - "5001:5000"
     environment:
@@ -55,16 +56,18 @@ services:
     networks:
       - ml-pipeline-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:5000/health\")' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
 
   api:
     build:
       context: .
       dockerfile: docker/Dockerfile.api
     container_name: ml-prediction-api
+    restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
@@ -88,4 +91,5 @@ services:
 networks:
   ml-pipeline-network:
     driver: bridge
+
 
