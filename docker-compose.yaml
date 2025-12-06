@@ -99,10 +99,55 @@ services:
       - ./config.yaml:/app/config.yaml:ro
     restart: unless-stopped
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - ml-pipeline-network
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana:/var/lib/grafana/dashboards:ro
+      - ./docker/grafana-datasource.yml:/etc/grafana/provisioning/datasources/prometheus.yml:ro
+      - ./docker/grafana-dashboard-provisioning.yml:/etc/grafana/provisioning/dashboards/default.yml:ro
+    networks:
+      - ml-pipeline-network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
 networks:
   ml-pipeline-network:
     driver: bridge
 
 volumes:
   mlflow-artifacts:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
     driver: local
