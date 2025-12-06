@@ -51,7 +51,10 @@ else:
     model_type = mlflow_config.get('model_type', 'xgboost')
     logger.info(f"MODEL_VARIANT=ml: Using ML model ({model_type})")
 
-mlflow_uri = mlflow_config.get('tracking_uri', 'http://localhost:5001')
+# Determine MLflow URI - use service name if running in Docker, localhost otherwise
+# Check if we're in Docker by looking for /app (Dockerfile sets WORKDIR to /app)
+default_mlflow_uri = 'http://mlflow:5000' if Path('/app').exists() else 'http://localhost:5001'
+mlflow_uri = mlflow_config.get('tracking_uri', default_mlflow_uri)
 experiment_name = mlflow_config.get('experiment_name', 'volatility_detection')
 model_source = mlflow_config.get('model_source', 'latest')  # 'latest', 'run_id', or 'local'
 run_id = mlflow_config.get('run_id')
@@ -140,9 +143,18 @@ def load_model_from_mlflow() -> Optional[tuple]:
 def load_model_from_local() -> Optional[object]:
     """Load model from local artifacts directory."""
     try:
-        model = joblib.load(model_path)
+        # Try joblib first, fallback to pickle
+        try:
+            model = joblib.load(model_path)
+        except:
+            import pickle
+            with open(model_path, 'rb') as f:
+                model = pickle.load(f)
         logger.info(f"Loaded model from local path: {model_path}")
         return model
+    except FileNotFoundError:
+        logger.warning(f"Model file not found at {model_path}")
+        return None
     except Exception as e:
         logger.warning(f"Could not load model from {model_path}: {e}")
         return None
