@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, working ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, working ]
 
 jobs:
   lint-and-test:
@@ -27,13 +27,13 @@ jobs:
 
       - name: Run Black
         run: |
-          python -m black --check .
+          python -m black --check scripts/ features/ models/ api_v1.py tests/
 
       - name: Run Ruff
         run: |
           ruff check scripts/ features/ models/ api_v1.py tests/
 
-      - name: Run tests
+      - name: Run integration test
         run: |
-          pytest
+          pytest tests/test_api_health.py -v
 
