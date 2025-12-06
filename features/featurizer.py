@@ -309,7 +309,7 @@ def process_message_buffer(
                             logger.error(
                                 "Giving up on message after %d failed Kafka attempts",
                                 max_attempts,
-                            )
+                )
             except Exception as e:
                 logger.error(f"Error publishing feature: {e}")
 

@@ -69,7 +69,7 @@ use_calibrated = mlflow_config.get("use_calibrated", False)
 if model_variant == "baseline":
     model_path = script_dir / "models" / "artifacts" / "logistic_model.pkl"
 else:
-    model_path = script_dir / "models" / "artifacts" / "xgb_model.pkl"
+model_path = script_dir / "models" / "artifacts" / "xgb_model.pkl"
 
 # Model state
 model = None
