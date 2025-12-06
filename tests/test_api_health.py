@@ -9,6 +9,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from api_v1 import api  # noqa: E402  <- tell Ruff to ignore “import not at top”
+
 # ----------------------------------------------------
 
 client = TestClient(api)
