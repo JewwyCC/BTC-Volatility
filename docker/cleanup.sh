@@ -4,13 +4,22 @@
 
 set -e
 
+# Save original working directory
+ORIGINAL_DIR="$(pwd)"
+
 echo "🧹 Cleaning up Docker resources..."
 
 # Stop and remove containers
 echo "Stopping containers..."
+# Try from project root (if script is run from project root)
 docker compose down 2>/dev/null || true
-cd docker && docker compose down 2>/dev/null || true
-cd ..
+# Try from docker subdirectory (if docker/compose.yaml exists)
+if [ -f "docker/compose.yaml" ]; then
+    (cd docker && docker compose down 2>/dev/null) || true
+fi
+
+# Restore original directory
+cd "$ORIGINAL_DIR"
 
 # Remove containers by name (in case they exist outside compose)
 echo "Removing containers by name..."
