@@ -225,7 +225,7 @@ def step_5_verify_models() -> bool:
 
     # Try to verify models are loadable
     print_info("Verifying models are loadable...")
-    code, _ = run_command(["python", "scripts/verify_models.py"], check=False)
+    code, _ = run_command(["python", "tests/verify_models.py"], check=False)
 
     if code == 0:
         print_success("Models are loadable")
@@ -342,9 +342,9 @@ def step_8_run_demo_test() -> bool:
     """Step 8: Run the test_demo.py script."""
     print_header("STEP 8: Running Demo Test Script")
 
-    print_info("Running scripts/test_demo.py...")
+    print_info("Running tests/test_demo.py...")
     code, output = run_command(
-        ["python", "scripts/test_demo.py"], check=False, capture_output=True
+        ["python", "tests/test_demo.py"], check=False, capture_output=True
     )
 
     # Print the output
@@ -388,7 +388,7 @@ def print_summary(results: Dict[str, bool]):
     print("  View API logs:    docker logs ml-prediction-api")
     print("  View MLflow:      http://localhost:5001")
     print("  View API docs:    http://localhost:8000/docs")
-    print("  Test API:         python scripts/test_demo.py")
+    print("  Test API:         python tests/test_demo.py")
     print("  Stop services:    docker compose down")
 
 
