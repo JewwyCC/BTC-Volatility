@@ -73,9 +73,9 @@ def main():
     # Load configuration
     if args.config:
         with open(args.config, "r") as f:
-            config = yaml.safe_load(f)
+            config = yaml.safe_load(f)  # noqa: F841
     else:
-        config = load_config()
+        config = load_config()  # noqa: F841
 
     # Load features
     logger.info(f"Loading features from {args.features}...")

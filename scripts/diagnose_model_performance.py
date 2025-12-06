@@ -32,7 +32,7 @@ def main():
         - (1 - config["model"]["train_test_split"])
     )
     val_pct = config["model"]["validation_split"]
-    test_pct = 1 - config["model"]["train_test_split"]
+    test_pct = 1 - config["model"]["train_test_split"]  # noqa: F841
 
     # Sort by timestamp
     df = df.sort_values("timestamp").reset_index(drop=True)
@@ -82,7 +82,7 @@ def main():
     available_features = [col for col in feature_cols if col in df.columns]
 
     X_train = df_train[available_features].fillna(0)
-    X_val = df_val[available_features].fillna(0)
+    X_val = df_val[available_features].fillna(0)  # noqa: F841
     X_test = df_test[available_features].fillna(0)
 
     # Get predictions

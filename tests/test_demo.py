@@ -16,9 +16,7 @@ the complete system is ready for demo recording.
 import sys
 import time
 import requests
-import subprocess
-from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, Tuple, Optional
 
 # Colors for output
 GREEN = "\033[92m"
