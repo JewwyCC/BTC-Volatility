@@ -18,6 +18,7 @@ data/processed/*.parquet
 *.sqlite
 
 # MLflow
+mlruns/
 mlflow.db
 mlflow.db.backup
 
