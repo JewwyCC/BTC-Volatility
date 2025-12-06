@@ -40,13 +40,13 @@ model:
 
 # MLflow Configuration
 mlflow:
-  tracking_uri: "http://localhost:5001"  # MLflow server URI
+  tracking_uri: "http://localhost:5001"  # MLflow server URI (use http://mlflow:5000 in Docker)
   experiment_name: "volatility_detection"
   # Model loading options:
-  # - "latest": Load latest run from experiment
-  # - "run_id": Load specific run_id (set run_id below)
-  # - "local": Fallback to local artifacts
-  model_source: "latest"  # or "run_id" or "local"
+  # - "latest": Load latest run from experiment (requires MLflow connection)
+  # - "run_id": Load specific run_id (set run_id below, requires MLflow connection)
+  # - "local": Always use local artifacts (no MLflow required)
+  model_source: "local"  # or "latest" or "run_id" - set to "local" to use models/artifacts/
   run_id: null  # Set to specific run_id if model_source is "run_id"
   model_type: "xgboost"  # "xgboost" or "logistic"
   use_calibrated: false  # Use calibrated model if available

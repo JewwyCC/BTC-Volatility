@@ -1,3 +1,7 @@
+# Docker Compose configuration for Kafka and MLflow services
+# This is a simplified version that can be used independently
+# For full setup with API, use the root docker-compose.yaml
+
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
@@ -7,12 +11,20 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     networks:
       - kafka-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: kafka
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     ports:
       - "9092:9092"
       - "9093:9093"
@@ -31,6 +43,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
+    restart: unless-stopped
 
   mlflow:
     image: ghcr.io/mlflow/mlflow:v2.8.1
@@ -40,13 +54,32 @@ services:
     environment:
       - MLFLOW_BACKEND_STORE_URI=file:///mlflow/mlruns
       - MLFLOW_DEFAULT_ARTIFACT_ROOT=/mlflow/artifacts
+      # Force gunicorn to bind to 0.0.0.0 - MLflow's --host parameter is ignored by gunicorn
+      - GUNICORN_CMD_ARGS=--bind=0.0.0.0:5000 --workers=2
     volumes:
-      - ./mlruns:/mlflow
-    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri file:///mlflow/mlruns --default-artifact-root /mlflow/artifacts
+      # Mount the mlruns directory from project root (relative to docker/ directory)
+      - ../mlruns:/mlflow/mlruns:rw
+      # Use named volume for artifacts to ensure persistence
+      - mlflow-artifacts:/mlflow/artifacts
+      # Mount custom entrypoint script
+      - ./mlflow-entrypoint.sh:/mlflow-entrypoint.sh:ro
+    # Use custom entrypoint to ensure proper host binding
+    entrypoint: ["/bin/sh", "/mlflow-entrypoint.sh"]
     networks:
       - kafka-network
+    healthcheck:
+      # Check if MLflow server is responding (try /health or root endpoint)
+      test: ["CMD", "python", "-c", "import urllib.request, sys; urllib.request.urlopen('http://localhost:5000/', timeout=3); sys.exit(0)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
 
 networks:
   kafka-network:
     driver: bridge
 
+volumes:
+  mlflow-artifacts:
+    driver: local
