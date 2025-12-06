@@ -61,6 +61,7 @@ def verify_model(model_path: Path, model_name: str) -> bool:
         if hasattr(model, "predict_proba"):
             # Test with dummy data
             import numpy as np
+
             try:
                 # Get feature count from model
                 if hasattr(model, "n_features_in_"):
@@ -76,7 +77,9 @@ def verify_model(model_path: Path, model_name: str) -> bool:
                 if predictions.shape[1] >= 2:
                     print_success(f"{model_name}: Can make predictions (probabilities)")
                 else:
-                    print_warning(f"{model_name}: predict_proba returns unexpected shape")
+                    print_warning(
+                        f"{model_name}: predict_proba returns unexpected shape"
+                    )
             except Exception as e:
                 print_warning(f"{model_name}: Could not test predictions: {e}")
 

@@ -32,7 +32,7 @@ def main():
         - (1 - config["model"]["train_test_split"])
     )
     val_pct = config["model"]["validation_split"]
-    1 - config["model"]["train_test_split"]
+    test_pct = 1 - config["model"]["train_test_split"]
 
     # Sort by timestamp
     df = df.sort_values("timestamp").reset_index(drop=True)
@@ -87,7 +87,6 @@ def main():
 
     # Get predictions
     y_train_proba = model.predict_proba(X_train)[:, 1]
-    model.predict_proba(X_val)[:, 1]
     y_test_proba = model.predict_proba(X_test)[:, 1]
 
     print("\n=== PREDICTION PROBABILITY ANALYSIS ===")

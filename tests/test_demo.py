@@ -377,7 +377,10 @@ def test_failure_recovery_simulation() -> bool:
         )
         # Check that metrics endpoint is available (indicates monitoring)
         metrics_response = requests.get(f"{BASE_URL}/metrics", timeout=5)
-        if metrics_response.status_code == 200 and "predict_req_errors" in metrics_response.text:
+        if (
+            metrics_response.status_code == 200
+            and "predict_req_errors" in metrics_response.text
+        ):
             print_success("Error metrics are tracked (failure recovery monitoring)")
         else:
             print_info("  (Metrics endpoint available for monitoring)")
@@ -427,7 +430,7 @@ def print_summary(results: Dict[str, bool]):
     ]
     for item in checklist_items:
         print(f"  {item}")
-    
+
     print(f"\n{BOLD}Note:{RESET} For full failure recovery demo (Section 3), manually:")
     print("  - Stop Kafka: docker stop kafka")
     print("  - Verify API still responds: curl http://localhost:8000/health")

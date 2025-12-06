@@ -151,6 +151,8 @@ def load_model_from_local() -> Optional[object]:
         # Try joblib first, fallback to pickle
         try:
             model = joblib.load(model_path)
+        except FileNotFoundError:
+            raise  # Re-raise to be caught by outer handler
         except Exception:
             import pickle
 

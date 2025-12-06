@@ -201,9 +201,9 @@ def main():
     # Load configuration
     if args.config:
         with open(args.config, "r") as f:
-            yaml.safe_load(f)
+            config = yaml.safe_load(f)
     else:
-        load_config()
+        config = load_config()
 
     # Connect to MLflow
     mlflow.set_tracking_uri(args.mlflow_uri)

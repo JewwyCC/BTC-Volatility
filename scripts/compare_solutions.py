@@ -23,7 +23,7 @@ def analyze_solution(config_path: str, solution_name: str):
         - (1 - config["model"]["train_test_split"])
     )
     val_pct = config["model"]["validation_split"]
-    1 - config["model"]["train_test_split"]
+    test_pct = 1 - config["model"]["train_test_split"]
     threshold_percentile = config["model"].get("threshold_percentile", 95) / 100.0
     split_strategy = config["model"].get("split_strategy", "temporal")
 
