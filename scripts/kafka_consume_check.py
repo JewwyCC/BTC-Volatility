@@ -9,7 +9,6 @@ import json
 import argparse
 import logging
 from pathlib import Path
-from datetime import datetime
 
 import yaml
 from kafka import KafkaConsumer

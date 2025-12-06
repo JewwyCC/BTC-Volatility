@@ -11,20 +11,9 @@ import logging
 from pathlib import Path
 from datetime import datetime
 
-import pandas as pd
 import numpy as np
 import yaml
 import mlflow
-from sklearn.metrics import (
-    precision_recall_curve,
-    average_precision_score,
-    f1_score,
-    precision_score,
-    recall_score,
-    roc_auc_score,
-    confusion_matrix,
-    classification_report,
-)
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -212,9 +201,9 @@ def main():
     # Load configuration
     if args.config:
         with open(args.config, "r") as f:
-            config = yaml.safe_load(f)
+            yaml.safe_load(f)
     else:
-        config = load_config()
+        load_config()
 
     # Connect to MLflow
     mlflow.set_tracking_uri(args.mlflow_uri)
@@ -318,7 +307,7 @@ def main():
         # Also save as PDF if markdown is available
         try:
             import markdown
-            from weasyprint import HTML, CSS
+            from weasyprint import HTML
 
             html = markdown.markdown(report_text)
             pdf_path = output_path.with_suffix(".pdf")

@@ -8,14 +8,11 @@ in the file store format where each run is stored as its own directory.
 
 import argparse
 import logging
-import os
 import shutil
 from pathlib import Path
-from typing import Dict, List
 
 import mlflow
 from mlflow.tracking import MlflowClient
-from mlflow.store.tracking.file_store import FileStore
 import yaml
 
 logging.basicConfig(

@@ -3,7 +3,6 @@
 
 import yaml
 import pandas as pd
-import numpy as np
 from pathlib import Path
 
 
@@ -24,7 +23,7 @@ def analyze_solution(config_path: str, solution_name: str):
         - (1 - config["model"]["train_test_split"])
     )
     val_pct = config["model"]["validation_split"]
-    test_pct = 1 - config["model"]["train_test_split"]
+    1 - config["model"]["train_test_split"]
     threshold_percentile = config["model"].get("threshold_percentile", 95) / 100.0
     split_strategy = config["model"].get("split_strategy", "temporal")
 
@@ -50,7 +49,7 @@ def analyze_solution(config_path: str, solution_name: str):
     print(f"Threshold percentile: {threshold_percentile*100:.0f}%")
     print(f"Threshold (τ): {tau:.8f}")
     print(f"Split strategy: {split_strategy}")
-    print(f"\nLabel distribution:")
+    print("\nLabel distribution:")
     print(
         f"  Train - Positives: {y_train.sum()} ({y_train.mean()*100:.2f}%), Negatives: {(1-y_train).sum()} ({(1-y_train.mean())*100:.2f}%)"
     )
@@ -65,14 +64,14 @@ def analyze_solution(config_path: str, solution_name: str):
     has_val_pos = y_val.sum() > 0
     has_test_pos = y_test.sum() > 0
 
-    print(f"\nEvaluation capability:")
+    print("\nEvaluation capability:")
     print(f"  Validation set can be evaluated: {has_val_pos}")
     print(f"  Test set can be evaluated: {has_test_pos}")
 
     if not has_val_pos:
-        print(f"  ⚠️  WARNING: Validation set has no positives!")
+        print("  ⚠️  WARNING: Validation set has no positives!")
     if not has_test_pos:
-        print(f"  ⚠️  WARNING: Test set has no positives!")
+        print("  ⚠️  WARNING: Test set has no positives!")
 
     return {
         "solution": solution_name,

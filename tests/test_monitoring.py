@@ -5,7 +5,6 @@ Test Monitoring Implementation
 Tests Prometheus metrics, MODEL_VARIANT, and drift summary generation.
 """
 
-import os
 import sys
 import json
 from pathlib import Path

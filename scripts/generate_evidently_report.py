@@ -9,7 +9,6 @@ to detect drift and data quality issues.
 import argparse
 import logging
 from pathlib import Path
-from datetime import datetime
 
 import pandas as pd
 import yaml
@@ -74,9 +73,9 @@ def main():
     # Load configuration
     if args.config:
         with open(args.config, "r") as f:
-            config = yaml.safe_load(f)
+            yaml.safe_load(f)
     else:
-        config = load_config()
+        load_config()
 
     # Load features
     logger.info(f"Loading features from {args.features}...")
@@ -102,7 +101,7 @@ def main():
         df_reference = df.iloc[:n_train].copy()  # Training data
         df_current = df.iloc[n_train + n_val :].copy()  # Test data
 
-        logger.info(f"\nTrain/Test Split (for drift detection):")
+        logger.info("\nTrain/Test Split (for drift detection):")
         logger.info(
             f"  Reference (Training): {len(df_reference)} samples ({args.train_pct*100:.1f}%)"
         )
@@ -123,7 +122,7 @@ def main():
         df_reference = df.iloc[:n_early].copy()
         df_current = df.iloc[-n_late:].copy()
 
-        logger.info(f"\nEarly/Late Window Split:")
+        logger.info("\nEarly/Late Window Split:")
         logger.info(f"  Reference (Early): {len(df_reference)} samples")
         logger.info(
             f"    Time range: {df_reference['timestamp'].min()} to {df_reference['timestamp'].max()}"
@@ -208,8 +207,8 @@ def main():
 
     # Get drift summary from the evaluation result
     try:
-        drift_dict = drift_eval.as_dict()
-        logger.info(f"Dataset Drift: Check HTML reports for detailed analysis")
+        drift_eval.as_dict()
+        logger.info("Dataset Drift: Check HTML reports for detailed analysis")
         # The dict structure may vary, but we can log that reports were generated
     except Exception as e:
         logger.debug(f"Could not extract drift summary: {e}")

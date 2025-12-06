@@ -16,14 +16,11 @@ from typing import Dict, Tuple
 import pandas as pd
 import numpy as np
 import yaml
-import mlflow
-import mlflow.sklearn
-from sklearn.linear_model import LogisticRegression
 from dotenv import load_dotenv
 
 # Try to import XGBoost
 try:
-    import xgboost as xgb
+    import xgboost as xgb  # noqa: F401
     import pickle
 
     XGBOOST_AVAILABLE = True

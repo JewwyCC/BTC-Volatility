@@ -8,8 +8,7 @@ import numpy as np
 import pickle
 from pathlib import Path
 import yaml
-from sklearn.metrics import precision_recall_curve, roc_curve, f1_score
-import matplotlib.pyplot as plt
+from sklearn.metrics import precision_recall_curve, f1_score
 
 
 def load_config():
@@ -33,7 +32,7 @@ def main():
         - (1 - config["model"]["train_test_split"])
     )
     val_pct = config["model"]["validation_split"]
-    test_pct = 1 - config["model"]["train_test_split"]
+    1 - config["model"]["train_test_split"]
 
     # Sort by timestamp
     df = df.sort_values("timestamp").reset_index(drop=True)
@@ -56,7 +55,7 @@ def main():
     y_val = (df_val["future_volatility"] >= tau).astype(int)
     y_test = (df_test["future_volatility"] >= tau).astype(int)
 
-    print(f"\nLabel Distribution:")
+    print("\nLabel Distribution:")
     print(f"  Train - Positives: {y_train.sum()} ({y_train.mean()*100:.2f}%)")
     print(f"  Val - Positives: {y_val.sum()} ({y_val.mean()*100:.2f}%)")
     print(f"  Test - Positives: {y_test.sum()} ({y_test.mean()*100:.2f}%)")
@@ -88,11 +87,11 @@ def main():
 
     # Get predictions
     y_train_proba = model.predict_proba(X_train)[:, 1]
-    y_val_proba = model.predict_proba(X_val)[:, 1]
+    model.predict_proba(X_val)[:, 1]
     y_test_proba = model.predict_proba(X_test)[:, 1]
 
-    print(f"\n=== PREDICTION PROBABILITY ANALYSIS ===")
-    print(f"\nTrain set probabilities:")
+    print("\n=== PREDICTION PROBABILITY ANALYSIS ===")
+    print("\nTrain set probabilities:")
     print(f"  Min: {y_train_proba.min():.4f}")
     print(f"  Max: {y_train_proba.max():.4f}")
     print(f"  Mean: {y_train_proba.mean():.4f}")
@@ -102,7 +101,7 @@ def main():
         f"  Predictions at 0.5 threshold: {(y_train_proba >= 0.5).sum()} / {len(y_train_proba)}"
     )
 
-    print(f"\nTest set probabilities:")
+    print("\nTest set probabilities:")
     print(f"  Min: {y_test_proba.min():.4f}")
     print(f"  Max: {y_test_proba.max():.4f}")
     print(f"  Mean: {y_test_proba.mean():.4f}")
@@ -113,7 +112,7 @@ def main():
     )
 
     # Check optimal threshold
-    print(f"\n=== OPTIMAL THRESHOLD ANALYSIS ===")
+    print("\n=== OPTIMAL THRESHOLD ANALYSIS ===")
 
     # For test set (if it has positives)
     if y_test.sum() > 0:
@@ -125,7 +124,7 @@ def main():
         )
         optimal_f1 = f1_scores[optimal_idx]
 
-        print(f"\nTest set optimal threshold (F1-maximizing):")
+        print("\nTest set optimal threshold (F1-maximizing):")
         print(f"  Optimal threshold: {optimal_threshold:.4f}")
         print(f"  Optimal F1 score: {optimal_f1:.4f}")
 
@@ -143,13 +142,13 @@ def main():
         y_test_pred_05 = (y_test_proba >= 0.5).astype(int)
         cm_05 = confusion_matrix(y_test, y_test_pred_05)
         tn_05, fp_05, fn_05, tp_05 = cm_05.ravel()
-        print(f"\n  At 0.5 threshold:")
+        print("\n  At 0.5 threshold:")
         print(f"    Confusion Matrix: TP={tp_05}, FP={fp_05}, TN={tn_05}, FN={fn_05}")
         print(f"    F1 Score: {f1_score(y_test, y_test_pred_05):.4f}")
 
     # Feature importance (for logistic regression, use coefficients)
     if hasattr(model, "coef_"):
-        print(f"\n=== FEATURE IMPORTANCE (Logistic Regression Coefficients) ===")
+        print("\n=== FEATURE IMPORTANCE (Logistic Regression Coefficients) ===")
         coef = model.coef_[0]
         feature_importance = pd.DataFrame(
             {
@@ -161,25 +160,25 @@ def main():
         print(feature_importance.to_string(index=False))
 
     # Data quality checks
-    print(f"\n=== DATA QUALITY CHECKS ===")
-    print(f"\nFeature statistics (test set):")
+    print("\n=== DATA QUALITY CHECKS ===")
+    print("\nFeature statistics (test set):")
     print(X_test.describe())
 
-    print(f"\nMissing values:")
+    print("\nMissing values:")
     print(X_test.isnull().sum())
 
-    print(f"\nFeature correlations with target (test set):")
+    print("\nFeature correlations with target (test set):")
     if y_test.sum() > 0:
         correlations = X_test.corrwith(y_test).sort_values(ascending=False)
         print(correlations)
 
     # Distribution shift analysis
-    print(f"\n=== DISTRIBUTION SHIFT ANALYSIS ===")
-    print(f"\nFeature means:")
+    print("\n=== DISTRIBUTION SHIFT ANALYSIS ===")
+    print("\nFeature means:")
     print(f"  Train: {X_train.mean().to_dict()}")
     print(f"  Test:  {X_test.mean().to_dict()}")
 
-    print(f"\nFeature stds:")
+    print("\nFeature stds:")
     print(f"  Train: {X_train.std().to_dict()}")
     print(f"  Test:  {X_test.std().to_dict()}")
 

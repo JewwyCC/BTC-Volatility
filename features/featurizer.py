@@ -20,7 +20,6 @@ import time
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
-from collections import deque
 
 import pandas as pd
 import numpy as np
@@ -464,7 +463,7 @@ def main():
             )
             logger.info(f"  Columns: {list(df_all.columns)}")
             if "future_volatility" in df_all.columns:
-                logger.info(f"  Future volatility stats:")
+                logger.info("  Future volatility stats:")
                 logger.info(f"    Mean: {df_all['future_volatility'].mean():.6f}")
                 logger.info(f"    Std: {df_all['future_volatility'].std():.6f}")
                 logger.info(f"    Min: {df_all['future_volatility'].min():.6f}")

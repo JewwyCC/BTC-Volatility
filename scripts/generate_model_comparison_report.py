@@ -11,13 +11,12 @@ import logging
 import pickle
 import json
 from pathlib import Path
-from datetime import datetime
 
 import pandas as pd
 import numpy as np
 import yaml
 from evidently import Report
-from evidently.presets import DataDriftPreset, DataSummaryPreset
+from evidently.presets import DataDriftPreset
 from sklearn.metrics import (
     precision_score,
     recall_score,
@@ -25,8 +24,6 @@ from sklearn.metrics import (
     roc_auc_score,
     average_precision_score,
     confusion_matrix,
-    precision_recall_curve,
-    roc_curve,
 )
 from dotenv import load_dotenv
 
@@ -75,7 +72,7 @@ def load_model_predictions(features_path: str, artifacts_dir: Path):
     n_val = int(n * val_pct)
 
     df_train = df.iloc[:n_train].copy()
-    df_val = df.iloc[n_train : n_train + n_val].copy()
+    df.iloc[n_train : n_train + n_val].copy()
     df_test = df.iloc[n_train + n_val :].copy()
 
     # Compute threshold
@@ -338,23 +335,14 @@ def main():
     # Create a combined report comparing all models
     # Use XGBoost as reference if available, otherwise use first model
     if "xgboost" in comparison_data:
-        overall_reference = comparison_data["xgboost"]
-        ref_name = "xgboost"
+        comparison_data["xgboost"]
     else:
-        overall_reference = list(comparison_data.values())[0]
-        ref_name = list(comparison_data.keys())[0]
+        list(comparison_data.values())[0]
+        list(comparison_data.keys())[0]
 
     # Create summary comparison
     summary_data = []
     for model_name, data in comparison_data.items():
-        from sklearn.metrics import (
-            precision_score,
-            recall_score,
-            f1_score,
-            roc_auc_score,
-            average_precision_score,
-            confusion_matrix,
-        )
 
         y_true = data["target"]
         y_pred = data["prediction"]
@@ -362,7 +350,7 @@ def main():
 
         try:
             roc_auc = roc_auc_score(y_true, y_proba) if len(set(y_true)) > 1 else np.nan
-        except:
+        except Exception:
             roc_auc = np.nan
 
         try:
@@ -371,7 +359,7 @@ def main():
                 if len(set(y_true)) > 1
                 else 0.0
             )
-        except:
+        except Exception:
             pr_auc = 0.0
 
         cm = confusion_matrix(y_true, y_pred)
@@ -409,7 +397,7 @@ def main():
     logger.info(f"\n{summary_df.to_string(index=False)}")
 
     logger.info(f"\nReports saved to: {output_dir}")
-    logger.info(f"  - Comparison reports: model_comparison_*.html")
+    logger.info("  - Comparison reports: model_comparison_*.html")
     logger.info(f"  - Summary: {summary_path}")
 
     return 0

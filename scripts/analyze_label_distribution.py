@@ -2,7 +2,6 @@
 """Analyze label distribution across different thresholds and split strategies."""
 
 import pandas as pd
-import numpy as np
 
 # Load data
 df = pd.read_parquet("data/processed/features.parquet")

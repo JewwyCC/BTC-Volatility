@@ -151,7 +151,7 @@ def load_model_from_local() -> Optional[object]:
         # Try joblib first, fallback to pickle
         try:
             model = joblib.load(model_path)
-        except:
+        except Exception:
             import pickle
 
             with open(model_path, "rb") as f:
@@ -321,7 +321,7 @@ def version():
             .decode()
             .strip()
         )
-    except:
+    except Exception:
         sha = model_version[:7] if len(model_version) >= 7 else "unknown"
 
     return {"model": model_var, "sha": sha}

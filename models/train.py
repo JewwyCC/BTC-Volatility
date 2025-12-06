@@ -11,7 +11,6 @@ import argparse
 import logging
 import warnings
 from pathlib import Path
-from datetime import datetime
 
 import pandas as pd
 import numpy as np
@@ -28,7 +27,6 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
     confusion_matrix,
-    classification_report,
 )
 from sklearn.exceptions import UndefinedMetricWarning
 from dotenv import load_dotenv
@@ -288,7 +286,7 @@ def evaluate_model(
     logger.info(f"\n{model_name} - {split_name.upper()} Metrics:")
     logger.info(f"  PR-AUC: {pr_auc:.4f}")
     if np.isnan(roc_auc):
-        logger.info(f"  ROC-AUC: nan (only one class present)")
+        logger.info("  ROC-AUC: nan (only one class present)")
     else:
         logger.info(f"  ROC-AUC: {roc_auc:.4f}")
     logger.info(f"  F1 Score: {f1:.4f}")
@@ -321,7 +319,7 @@ def time_based_split(
     df_val = df.iloc[n_train : n_train + n_val].copy()
     df_test = df.iloc[n_train + n_val :].copy()
 
-    logger.info(f"\nTime-based split:")
+    logger.info("\nTime-based split:")
     logger.info(f"  Train: {len(df_train)} samples ({len(df_train)/n*100:.1f}%)")
     logger.info(f"    {df_train['timestamp'].min()} to {df_train['timestamp'].max()}")
     logger.info(f"  Validation: {len(df_val)} samples ({len(df_val)/n*100:.1f}%)")
@@ -504,7 +502,7 @@ def stratified_temporal_split(
     df_val = df_val.drop(columns=["label"])
     df_test = df_test.drop(columns=["label"])
 
-    logger.info(f"\nStratified temporal split:")
+    logger.info("\nStratified temporal split:")
     logger.info(f"  Train: {len(df_train)} samples ({len(df_train)/n*100:.1f}%)")
     logger.info(f"    {df_train['timestamp'].min()} to {df_train['timestamp'].max()}")
     logger.info(f"  Validation: {len(df_val)} samples ({len(df_val)/n*100:.1f}%)")
@@ -595,13 +593,13 @@ def main():
         )
 
         # Now do stratified temporal split
-        logger.info(f"\nUsing stratified temporal split strategy")
+        logger.info("\nUsing stratified temporal split strategy")
         df_train, df_val, df_test = stratified_temporal_split(
             df, tau, train_pct, val_pct, test_pct, min_positive_ratio
         )
     else:
         # Standard temporal split
-        logger.info(f"\nUsing temporal split strategy")
+        logger.info("\nUsing temporal split strategy")
         df_train, df_val, df_test = time_based_split(df, train_pct, val_pct, test_pct)
 
     # Compute threshold from training data (may have been redistributed)
@@ -612,7 +610,7 @@ def main():
     y_val = create_labels(df_val, tau)
     y_test = create_labels(df_test, tau)
 
-    logger.info(f"\nLabel distribution:")
+    logger.info("\nLabel distribution:")
     logger.info(
         f"  Train - Spikes (1): {y_train.sum()} ({y_train.mean()*100:.2f}%), Normal (0): {(1-y_train).sum()} ({(1-y_train.mean())*100:.2f}%)"
     )
@@ -745,7 +743,7 @@ def main():
 
         logger.info(f"Baseline parameters saved locally at {baseline_path}")
         if mlflow_available:
-            logger.info(f"✓ Baseline model logged to MLflow")
+            logger.info("✓ Baseline model logged to MLflow")
 
     # ===== ML MODEL =====
     logger.info("\n" + "=" * 60)
@@ -903,7 +901,7 @@ def main():
                     "importance": base_model.feature_importances_,
                 }
             ).sort_values("importance", ascending=False)
-            logger.info(f"\nFeature Importance:")
+            logger.info("\nFeature Importance:")
             for _, row in feature_importance.iterrows():
                 logger.info(f"  {row['feature']}: {row['importance']:.6f}")
         elif hasattr(base_model, "coef_"):
@@ -916,7 +914,7 @@ def main():
                     "abs_coefficient": np.abs(coef),
                 }
             ).sort_values("abs_coefficient", ascending=False)
-            logger.info(f"\nFeature Importance (Logistic Regression Coefficients):")
+            logger.info("\nFeature Importance (Logistic Regression Coefficients):")
             for _, row in feature_importance.iterrows():
                 logger.info(
                     f"  {row['feature']}: {row['coefficient']:.6f} (abs: {row['abs_coefficient']:.6f})"
@@ -961,7 +959,7 @@ def main():
 
         logger.info(f"✓ ML model saved to {model_path}")
         if mlflow_available:
-            logger.info(f"✓ ML model logged to MLflow")
+            logger.info("✓ ML model logged to MLflow")
 
     logger.info("\n" + "=" * 60)
     logger.info("TRAINING COMPLETE")

@@ -16,10 +16,8 @@ from pathlib import Path
 from datetime import datetime, timezone
 from typing import Dict, Optional
 import numpy as np
-import pandas as pd
 import yaml
 from kafka import KafkaConsumer, KafkaProducer
-from kafka.errors import KafkaError
 from dotenv import load_dotenv
 
 # MLflow imports
@@ -73,7 +71,6 @@ def signal_handler(sig, frame):
 def load_model_from_local(project_root: Path, model_type: str = "xgboost"):
     """Load model from local artifacts directory."""
     try:
-        import joblib
         import pickle
 
         artifacts_dir = project_root / "models" / "artifacts"

@@ -81,7 +81,7 @@ def main():
     test_pct = 1 - config["model"]["train_test_split"]
     threshold_percentile = config["model"].get("threshold_percentile", 95) / 100.0
 
-    print(f"\nSplit configuration:")
+    print("\nSplit configuration:")
     print(f"  Train: {train_pct*100:.1f}%")
     print(f"  Validation: {val_pct*100:.1f}%")
     print(f"  Test: {test_pct*100:.1f}%")
@@ -90,7 +90,7 @@ def main():
     # Split data
     df_train, df_val, df_test = time_based_split(df, train_pct, val_pct, test_pct)
 
-    print(f"\nActual split sizes:")
+    print("\nActual split sizes:")
     print(f"  Train: {len(df_train)} samples ({len(df_train)/len(df)*100:.1f}%)")
     print(f"    Time: {df_train['timestamp'].min()} to {df_train['timestamp'].max()}")
     print(f"  Validation: {len(df_val)} samples ({len(df_val)/len(df)*100:.1f}%)")
@@ -100,7 +100,7 @@ def main():
 
     # Compute threshold from training data (as done in train.py)
     tau = df_train["future_volatility"].quantile(threshold_percentile)
-    print(f"\nThreshold (τ) computed from training data:")
+    print("\nThreshold (τ) computed from training data:")
     print(f"  {threshold_percentile*100:.0f}th percentile: {tau:.8f}")
 
     # Create labels for each split using the training threshold
@@ -108,7 +108,7 @@ def main():
     y_val = (df_val["future_volatility"] >= tau).astype(int)
     y_test = (df_test["future_volatility"] >= tau).astype(int)
 
-    print(f"\nLabel distribution (using training threshold):")
+    print("\nLabel distribution (using training threshold):")
     print(
         f"  Train - Spikes (1): {y_train.sum()} ({y_train.mean()*100:.2f}%), Normal (0): {(1-y_train).sum()} ({(1-y_train.mean())*100:.2f}%)"
     )
@@ -120,7 +120,7 @@ def main():
     )
 
     # Analyze volatility distribution in each split
-    print(f"\nVolatility statistics by split:")
+    print("\nVolatility statistics by split:")
     print(
         f"  Train - Mean: {df_train['future_volatility'].mean():.8f}, Std: {df_train['future_volatility'].std():.8f}, Max: {df_train['future_volatility'].max():.8f}"
     )
@@ -143,7 +143,7 @@ def main():
         else np.nan
     )
 
-    print(f"\nIf we used each split's own threshold:")
+    print("\nIf we used each split's own threshold:")
     if not np.isnan(tau_val):
         print(
             f"  Validation {threshold_percentile*100:.0f}th percentile: {tau_val:.8f}"
@@ -158,32 +158,32 @@ def main():
         )
 
     # Why no spikes in validation?
-    print(f"\n" + "=" * 80)
+    print("\n" + "=" * 80)
     print("WHY NO SPIKES IN VALIDATION?")
     print("=" * 80)
     print(f"\nThe threshold τ = {tau:.8f} is computed from training data.")
     print(
         f"This threshold represents the {threshold_percentile*100:.0f}th percentile of training data's future_volatility."
     )
-    print(f"\nValidation set statistics:")
+    print("\nValidation set statistics:")
     print(
         f"  Max future_volatility in validation: {df_val['future_volatility'].max():.8f}"
     )
     print(f"  Training threshold (τ): {tau:.8f}")
     if df_val["future_volatility"].max() < tau:
         print(
-            f"  → Validation's maximum volatility is LOWER than the training threshold!"
+            "  → Validation's maximum volatility is LOWER than the training threshold!"
         )
-        print(f"  → Therefore, NO samples in validation exceed the threshold.")
-        print(f"  → This happens because volatility spikes are CLUSTERED in time.")
+        print("  → Therefore, NO samples in validation exceed the threshold.")
+        print("  → This happens because volatility spikes are CLUSTERED in time.")
         print(
-            f"  → The validation period happened to be a 'calm' period with no spikes."
+            "  → The validation period happened to be a 'calm' period with no spikes."
         )
     else:
         print(
-            f"  → Validation's maximum volatility exceeds the threshold, but no samples do."
+            "  → Validation's maximum volatility exceeds the threshold, but no samples do."
         )
-        print(f"  → This suggests the threshold is too high, or spikes are very rare.")
+        print("  → This suggests the threshold is too high, or spikes are very rare.")
 
     # Create visualization
     fig, axes = plt.subplots(3, 1, figsize=(14, 10))
@@ -380,7 +380,7 @@ def main():
 
     plt.show()
 
-    print(f"\n" + "=" * 80)
+    print("\n" + "=" * 80)
     print("SUMMARY")
     print("=" * 80)
     print(

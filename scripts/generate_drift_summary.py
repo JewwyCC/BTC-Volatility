@@ -10,7 +10,6 @@ import argparse
 import logging
 from pathlib import Path
 from datetime import datetime, timezone
-import json
 
 import pandas as pd
 import yaml
@@ -59,7 +58,7 @@ def generate_drift_summary(df_reference, df_current, feature_cols, output_dir):
         # Fallback: try to get metrics directly
         try:
             report_dict = report_result.get_metrics()
-        except:
+        except Exception:
             # If all else fails, create minimal dict
             report_dict = {"metrics": []}
             logger.warning(
@@ -165,7 +164,7 @@ def write_summary_markdown(summary, df_reference, df_current, html_path, output_
 
 """
     else:
-        markdown += f"""✅ **NO DRIFT DETECTED**
+        markdown += """✅ **NO DRIFT DETECTED**
 
 - **Dataset Drift:** No
 - **Drifted Features:** 0
@@ -293,9 +292,9 @@ def main():
     # Load configuration
     if args.config:
         with open(args.config, "r") as f:
-            config = yaml.safe_load(f)
+            yaml.safe_load(f)
     else:
-        config = load_config()
+        load_config()
 
     # Load features
     logger.info(f"Loading features from {args.features}...")
@@ -318,7 +317,7 @@ def main():
     df_reference = df.iloc[:n_train].copy()  # Training data (reference)
     df_current = df.iloc[n_train + n_val :].copy()  # Test data (current)
 
-    logger.info(f"\nData Split:")
+    logger.info("\nData Split:")
     logger.info(
         f"  Reference (Training): {len(df_reference)} samples ({args.train_pct*100:.1f}%)"
     )

@@ -121,7 +121,7 @@ def main():
         output_dir.mkdir(parents=True, exist_ok=True)
         output_file = output_dir / "features_replay.parquet"
 
-    logger.info(f"Replaying raw data to generate features...")
+    logger.info("Replaying raw data to generate features...")
     logger.info(f"Input files: {args.raw}")
     logger.info(f"Output file: {output_file}")
 
@@ -217,7 +217,7 @@ def main():
     logger.info(f"  Columns: {list(df_output.columns)}")
 
     if "future_volatility" in df_output.columns:
-        logger.info(f"\nFuture Volatility Statistics:")
+        logger.info("\nFuture Volatility Statistics:")
         logger.info(f"  Mean: {df_output['future_volatility'].mean():.6f}")
         logger.info(f"  Std: {df_output['future_volatility'].std():.6f}")
         logger.info(f"  Min: {df_output['future_volatility'].min():.6f}")

@@ -12,13 +12,9 @@ Tests the entire system to ensure it runs perfectly:
 """
 
 import os
-import sys
 import time
-import json
 import subprocess
 import requests
-from pathlib import Path
-from typing import Dict, List, Tuple
 
 # Colors for output
 GREEN = "\033[92m"
@@ -327,7 +323,7 @@ def wait_for_service(
             if response.status_code == 200:
                 print_status("Service is ready", "PASS")
                 return True
-        except:
+        except Exception:
             pass
         time.sleep(1)
         if (i + 1) % 5 == 0:

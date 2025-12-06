@@ -5,7 +5,6 @@ Compare all model variants: Logistic, XGBoost, and XGBoost with calibration.
 
 import subprocess
 import sys
-from pathlib import Path
 
 
 def run_training(model_type, calibrate=False):
@@ -28,7 +27,7 @@ def run_training(model_type, calibrate=False):
     result = subprocess.run(cmd, capture_output=True, text=True)
 
     if result.returncode != 0:
-        print(f"ERROR: Training failed")
+        print("ERROR: Training failed")
         print(result.stderr)
         return None
 
@@ -49,7 +48,7 @@ def run_training(model_type, calibrate=False):
         ):
             try:
                 metrics["pr_auc"] = float(line.split("PR-AUC:")[1].strip())
-            except:
+            except Exception:
                 pass
         if (
             "ROC-AUC:" in line
@@ -59,7 +58,7 @@ def run_training(model_type, calibrate=False):
         ):
             try:
                 metrics["roc_auc"] = float(line.split("ROC-AUC:")[1].strip().split()[0])
-            except:
+            except Exception:
                 pass
         if (
             "F1 Score:" in line
@@ -69,7 +68,7 @@ def run_training(model_type, calibrate=False):
         ):
             try:
                 metrics["f1"] = float(line.split("F1 Score:")[1].strip())
-            except:
+            except Exception:
                 pass
         if (
             "Precision:" in line
@@ -79,7 +78,7 @@ def run_training(model_type, calibrate=False):
         ):
             try:
                 metrics["precision"] = float(line.split("Precision:")[1].strip())
-            except:
+            except Exception:
                 pass
         if (
             "Recall:" in line
@@ -89,7 +88,7 @@ def run_training(model_type, calibrate=False):
         ):
             try:
                 metrics["recall"] = float(line.split("Recall:")[1].strip())
-            except:
+            except Exception:
                 pass
 
     return metrics

@@ -7,7 +7,6 @@ Test script for newly implemented features:
 """
 
 import sys
-import time
 import json
 from pathlib import Path
 
@@ -15,11 +14,8 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-import yaml
-import mlflow
-import mlflow.xgboost
-from kafka import KafkaConsumer, KafkaProducer
-from kafka.errors import KafkaError
+import yaml  # noqa: E402
+from kafka import KafkaConsumer, KafkaProducer  # noqa: E402
 
 
 def test_mlflow_connection():
@@ -75,24 +71,24 @@ def test_mlflow_connection():
 
             # Try to load model
             try:
-                model = mlflow.xgboost.load_model(f"runs:/{run_id}/model")
+                mlflow.xgboost.load_model(f"runs:/{run_id}/model")
                 print(
                     f"✓ Model successfully loaded from MLflow (XGBoost, run {run_id[:8]})"
                 )
                 model_loaded = True
                 break
-            except Exception as e:
+            except Exception:
                 # Try sklearn model
                 try:
                     import mlflow.sklearn
 
-                    model = mlflow.sklearn.load_model(f"runs:/{run_id}/model")
+                    mlflow.sklearn.load_model(f"runs:/{run_id}/model")
                     print(
                         f"✓ Model successfully loaded from MLflow (sklearn, run {run_id[:8]})"
                     )
                     model_loaded = True
                     break
-                except Exception as e2:
+                except Exception:
                     continue
 
         if not model_loaded:
@@ -179,8 +175,8 @@ def test_kafka_connectivity():
                 bootstrap_servers=bootstrap_servers, consumer_timeout_ms=2000
             )
             # Try to get metadata (this tests connectivity)
-            metadata = consumer.list_consumer_groups()
-            print(f"✓ Kafka consumer connected")
+            consumer.list_consumer_groups()
+            print("✓ Kafka consumer connected")
             # Try to list topics
             try:
                 topics = consumer.list_topics(timeout=5)
@@ -201,7 +197,7 @@ def test_kafka_connectivity():
                 bootstrap_servers=bootstrap_servers,
                 value_serializer=lambda v: json.dumps(v).encode("utf-8"),
             )
-            print(f"✓ Kafka producer connected")
+            print("✓ Kafka producer connected")
             producer.close()
         except Exception as e:
             print(f"✗ Kafka producer failed: {e}")
@@ -223,7 +219,6 @@ def test_kafka_predictor_import():
     try:
         # Test import
         sys.path.insert(0, str(project_root / "scripts"))
-        import kafka_predictor
 
         print("✓ kafka_predictor module imported successfully")
 
@@ -235,11 +230,11 @@ def test_kafka_predictor_import():
         mlflow_config = config.get("mlflow", {})
         kafka_config = config.get("kafka", {})
 
-        print(f"✓ Config loaded")
+        print("✓ Config loaded")
         print(f"  - MLflow URI: {mlflow_config.get('tracking_uri')}")
         print(f"  - Experiment: {mlflow_config.get('experiment_name')}")
         print(f"  - Kafka servers: {kafka_config.get('bootstrap_servers')}")
-        print(f"  - Input topic: ticks.features")
+        print("  - Input topic: ticks.features")
         print(f"  - Output topic: {kafka_config.get('topics', {}).get('predictions')}")
 
         return True
@@ -284,7 +279,7 @@ def test_config_file():
         if "predictions" in topics:
             print(f"✓ kafka.topics.predictions: {topics['predictions']}")
         else:
-            print(f"✗ kafka.topics.predictions missing")
+            print("✗ kafka.topics.predictions missing")
             return False
 
         return True
